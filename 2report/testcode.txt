@@ -1,0 +1,68 @@
+add (S (S Z)) (S Z);; -> nat = S (S (S Z))
+
+sub (S (S Z)) (S Z);; -> nat = S Z
+
+sub (S Z) (S (S Z));; -> nat = Z
+
+mul (S (S Z)) (S (S (S Z))) nat = S (S (S (S (S (S Z)))))
+
+pow (S (S Z)) (S (S (S Z)));; -> nat = S (S (S (S (S (S (S (S Z)))))))
+
+
+n2i (S (S Z));; -> int = 2
+n2i Z;; -> int = 0
+
+
+i2n 2;; -> nat = S (S Z)
+
+
+pre_order(Node('a', Node('b', Node('d', Leaf, Leaf), Node('e', Leaf, Leaf)), Node('c', Leaf, Node('f', Node('g', Leaf, Leaf), Leaf))));;
+
+char list = ['a'; 'b'; 'd'; 'e'; 'c'; 'f'; 'g']
+
+
+in_order(Node('a', Node('b', Node('d', Leaf, Leaf), Node('e', Leaf, Leaf)), Node('c', Leaf, Node('f', Node('g', Leaf, Leaf), Leaf))));;
+
+char list = ['d'; 'b'; 'e'; 'a'; 'c'; 'g'; 'f']
+
+
+post_order(Node('a', Node('b', Node('d', Leaf, Leaf), Node('e', Leaf, Leaf)), Node('c', Leaf, Node('f', Node('g', Leaf, Leaf), Leaf))));;
+
+
+char list = ['d'; 'e'; 'b'; 'g'; 'f'; 'c'; 'a']
+
+https://ocaml.org/learn/tutorials/99problems.htmlのbinarytreeの図を用いた
+
+level_order (Node('a', Node('b', Node('d', Leaf, Leaf), Node('e', Leaf, Leaf)), Node('c', Leaf, Node('f', Node('g', Leaf, Leaf), Leaf))));;
+char list = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g']
+
+
+
+課題5
+eval (Eif (EConstBool true, EConstInt 2, EConstInt 2));;
+value = VInt 2 
+constとboolとifの可動性の証明
+
+eval (EAdd (EConstInt 2, EConstInt 2));;
+value = VInt 4
+EAdd  
+
+eval (ESub (EConstInt 2, EConstInt 2));;
+value = VInt 0
+ESub
+
+eval (EMul (EConstInt 9,  EConstInt 3));
+value = VInt 27
+EMul
+
+
+eval (EDiv (EConstInt 9,  EConstInt 3));;
+value = VInt 3
+EDiv
+
+ eval (Eeq (EConstInt 9, EConstInt 9));;
+ value = VBool true
+
+eval (Ethan (EConstInt 9, EConstInt 3));;
+value = VBool false
+Ethan
