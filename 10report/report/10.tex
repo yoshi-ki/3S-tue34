@@ -1,0 +1,236 @@
+\documentclass[uplatex,12pt]{jsarticle}
+\usepackage{listings}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+\lstset{basicstyle=\small,style=myCustomMatlabStyle}
+\renewcommand{\lstlistingname}{Code}
+
+\title {Functional and logic programming lab 9th report}
+\date{}
+\begin{document}
+\author{Yoshiki Fujiwara, 05-191023}
+\maketitle
+\section{Q1:　血縁関係}
+\subsection{動作例}
+\begin{lstlisting}[caption=動作例]
+?- bloodrelative(sanae,X).
+X = iwao ;
+X = mine ;
+X = miho ;
+X = kobo ;
+X = sanae ;
+X = miho ;
+X = kobo ;
+X = sanae ;
+X = miho ;
+X = kobo ;
+
+?- bloodrelative(iwao,X).
+X = sanae ;
+X = miho ;
+X = kobo ;
+false.
+
+?- bloodrelative(iwao,mine).
+false.
+\end{lstlisting}
+\subsection{考察}
+bloodrelativeを定義した。まず、共通の祖先をZとして、bloodrelative(X,Y) :- ancestor(X,Z), ancestor(Y,Z).とする。こうすることで共通の祖先を持つ者がlist upされる。ただ、このままだと、iwaoとsanaeが血縁関係にならないので、bloodrelative(X,Y) :- ancestor(X,Y).bloodrelative(X,Y) :- ancestor(Y,X).とすることで、祖先の情報がない親子関係についても定義することができるようになる。
+
+
+\section{Q2: 参考述語multの実装}
+\subsection{動作例}
+\begin{lstlisting}[caption=動作例]
+?- mult(s(z),X,s(s(z))).
+X = s(s(z)) ;
+false.
+
+?- mult(X,s(z),s(s(z))).
+X = s(s(z)) ;
+false.
+
+?- mult(s(s(z)),s(z),X).
+X = s(s(z)).
+
+\end{lstlisting}
+\subsection{考察}
+\subsubsection{実装について}
+
+multの三つ目の項にWをという変数を置き、ここに計算結果を代入するようにした。multの定義はaddと同じように二つからなる。
+
+一つ目は、mult(z,_,z).という定義である。この定義によって、一引数目にzeroがきたら、zeroを返すようにしている。
+
+二つ目は、mult(s(X),Y,W) :- add(Y,Z,W), mult(X,Y,Z).という定義である。一つ目の引数をかける回数と見ているのがポイントである。multで変数Zに一回少ない回数分multしたものが返ってきて、それにYを足すということをしている。
+addの定義は、スライドの定義通りに実装した。
+
+\subsubsection{問い合わせ}
+どれを変数にして問い合わせができるかについて考察する。結果としては今回の実装ではどの部分を変数にしても問い合わせが可能である。
+
+まず、addがどの部分を変数にして問い合わせができるかについて考察する。
+スライドに乗っているaddの定義は、変数一つの場合はどの部分に変数を持ってきても問い合わせができ、変数二つの場合は、第二引数が変数であれば問い合わせができる定義である。これはaddの定義について、add(z,Y,Y).が入っているからである。
+
+例えば、第一引数と第二引数が変数の場合、初めのルールが先に適用されるため、無限ループに陥ることなく、第三引数がゼロになるまで続く。
+
+第二引数と第三引数が変数の場合も同様で、第一引数がzになるまで2個目のルールが適用されて、最後に一つ目のルールが適用される。
+
+\vspace{12pt}
+
+この定義に着目すれば、mult(s(X),Y,W) :- add(Y,Z,W), mult(X,Y,Z).という定義をすれば、addについてに変数の探索が行われる時、第二引数は必ず変数である。よって、上述の説明より、必ず止まる。multについてはaddでZが探索済みなので、一変数の探索を行うことになる。こうすることで、multのどの部分を変数としても答えを返して止まるようになる。
+
+\vspace{12pt}
+
+他の定義をすると、止まらないことがある。
+例えば、mult(s(X),Y,W) :- add(Z,Y,W), mult(X,Y,Z).と定義する。multの第三引数が変数の場合、addの第一引数を第三引数が変数となるため、addについて解が無限に存在して、mult(s(s(z)),s(z),X).が無限ループに入ってしまう。
+
+もう一つのmultの定義例として、mult(s(X),Y,W) :- mult(X,Y,Z), add(Z,Y,W).がある。これはmult(X,s(z),s(s(z))).が無限ループに入ってしまう。
+multについて変数が二つの問い合わせをしていて、永遠に問い合わせをしてしまうからである。具体的には、二つめのルールの適用が永遠に可能となってしまう。
+
+よって、一番初めに述べた実装方法で実装した。
+
+
+\section{Q3: reverse appendの実装}
+\subsection{動作例}
+\begin{lstlisting}[caption=動作例]
+?- reverse([1,2],X).
+X = [2, 1].
+
+?- reverse([1,2,3],X).
+X = [3, 2, 1].
+
+?- reverse([1],X).
+X = [1].
+
+?- reverse([],X).
+X = [].
+
+?- concat([[1], [2,3]], X).
+X = [1, 2, 3].
+
+?- concat([[1], [2,3], [4,5]], X).
+X = [1, 2, 3, 4, 5].
+\end{lstlisting}
+\subsection{考察}
+まず、スライド通りにapeendを実装した。
+
+\subsubsection{reverse}
+まず、reverseの第二引数にreverseした結果が返るように、すなわち、第二引数を変数とした問い合わせができるように実装する。
+
+評価の際は、第一引数を減らしていって、空リストに帰着させるという方針で実装する。よって、まずはreverse([],[]).とする。そして、consを用いて、要素を一つずつ取って、後ろにつければ良いと考え、reverse([X \mid Y],Z) :- reverse(Y,W), append(W,[X],Z).とする。こうすることで、listから一つ要素Xを取って、YをreverseしたものとXをappendするコードとしてかける。WはYをreverseした結果を入れる変数である。
+
+\subsubsection{concat}
+これもreverseと同じ方針で実装する。concatの第二引数にはconcatを行なった結果が格納される。新たな変数Wを導入し、concat([X \mid Y],Z) :- concat(Y,W), append(X,W,Z).とかく。WにはYというlistのlistについてconcatを行なった結果が格納される。appendそしてそれに対して、Xをappendすれば、concatが実装できたことになる。
+
+\section{Q4: Hamilton路}
+\subsection{動作例}
+\begin{lstlisting}[caption=動作例]
+?- hamilton([1,2,3,4],[[1,2],[2,3],[3,4]]).
+true ;
+false.
+
+?- hamilton([1,2,3,4,5,6],[[1,2],[2,3],[3,4],[4,5],[5,4],[5,6]]).
+true ;
+false.
+
+?- hamilton([],[]).
+true ;
+false.
+
+?- hamilton([1,2,3,4,5,6],[[1,2],[2,3],[3,4],[4,5],[5,2],[2,6]]).
+false.
+
+\end{lstlisting}
+\subsection{考察}
+hamilton閉路を実装するために、様々なfactを実装したので、その説明をまずする。
+
+まず、append関数を実装した。append関数はOcamlでいう@にあたる関数である。スライドにあった実装をそのまま行なった。
+
+次に、vertexinというfactを実装した。これは第一引数が第二引数のlistに含まれているかjudgeするfactである。これはlistを順番に見ていき、同一のものがあれば、第一式、vertexin(X,[X\mid\_]).でtrueが返される。Xの部分が一致していなければ残りのlistをみる第二式で判断する。
+
+次に、edgesというfactについて説明する。このfactは頂点Aと辺集合Eが与えられた時に、Eの中でAを始点とする辺の終点を探索する時に用いる。第三引数を変数にして用いるイメージである。
+
+さらに、pickというfactを定義した。このfactは頂点Xを頂点集合Vから抜いたものを用いたいときに用いる。第一引数に取り除きたいvertexを、第二引数にvertex setを、第三引数に変数を持ってきて、第二引数から第一引数を取り除いたveretx setを第３引数に入れる。
+
+最後の補助factとして、searchを定義した。このfactは第一引数に頂点A、第二引数に辺集合E、第三引数に変数Vを持ってきて使う。(V,E)についてAを始点としてhamilton pathがあれば、trueを返す。まず、第一引数から次に移る頂点Bを選ぶ。これはedgesを用いることで実現できる。edgesで得た次に移る候補を頂点集合Vから除いたものをRとして、Bを始点とする、残りの頂点がRのhamilton pathを考える。この動作において、pickを用いてVからRを求めているが、この作業時に、BがVになければ、falseが返ってくるので、hamilton pathの同一の頂点を二回通らないという条件を満たしている。
+
+最後に、hamiltonを定義する。空がきた場合は、trueを返すようにしている。まず、vertexinで、任意の頂点Zを頂点集合から選ぶ。そのを頂点集合から除き、searchでhamilton pathが存在するか否かを判定する。
+
+このようにして実装ができる。
+
+
+\section{Q5: チューリング完全であることの証明}
+\subsection{方針}
+チューリング完全であることの定義にはたくさんの同値関係がある。例えば、構造化プログラミング定理と呼ばれるものや、ラムダ計算を記述できることや、再帰関数を記述できることなどがある。
+
+今回は再帰関数を表現できることを示すことで、チューリング完全であることを示す。
+
+再帰関数を表現できることを示すには、Base caseと、Composition, Primitive recursion, Minimizationをそれぞれ示せばよい。
+
+\subsection{Base caseについて}
+Basecaseについて示すべきことは、zeroとsuccと、projを表現できることである。
+
+\subsubsection{zeroとsucc}
+zeroについては今回のQ2で使ったzがそれにあたり、succについては今回のQ2で使った、s()がそれにあたる。
+
+\subsubsection{proj}
+projを表現するものは、listのデータ構造である。listはlistのどの要素についてもアクセスが可能であることから、これはprojそのものを表現していると言える。
+
+実際にアクセスするコードは、以下のようになる。
+\begin{lstlisting}[caption=proj]
+P(z,[A,_],A).
+P(s(X),[_,B],Z) :- P(X,B,Z).
+\end{lstlisting}
+こうした上で、Zを変数として問い合わせると、listのX番目にアクセスできる。
+
+\subsection{Compositionについて}
+
+$g_{0} ... g_{m-1}$をrecursive functionとして、
+
+$\(\boldsymbol{\lambda}\left(x_{0}, \ldots, x_{n-1}\right) \cdot g\left(g_{0}\left(x_{0}, \ldots, x_{n-1}\right), \ldots, g_{m-1}\left(x_{0}, \ldots, x_{n-1}\right)\right) \quad : \quad \mathbb{N}^{n} \rightarrow \mathbb{N}\)$
+
+を表現できることを示せばよい。
+
+以下のように表現できる。
+\begin{lstlisting}[caption=Composition]
+P(X1,X2,.....,Xm,Z) :- P1(X1,X2,...Xm,Z1), P2(X1,X2,....,Xm,Z2), ...
+ Pm(X1,X2,...,Xm,Zm), Q(Z1,Z2,.....,Zm,Z)
+\end{lstlisting}
+
+\subsection{Primitice rucursionについて}
+gとhをrecursive functionとして、
+
+$\(\begin{aligned} f(\vec{x}, 0) & :=g(\vec{x}) \\ f(\vec{x}, y+1) & :=h(\vec{x}, y, f(\vec{x}, y)) \end{aligned}\)$
+
+を表現できることを示せばよい。
+
+以下のように表現できる。
+\begin{lstlisting}[caption=Primitive recursion]
+P(X,z,Z) ;- Q(X,Z)
+P(X,S(Y),Z) :- P(X,Y,W), R(X,Y,W,Z)
+\end{lstlisting}
+
+hの中にfが入っていることは上のWのようにすると、表現できる。
+
+
+\subsection{Minimizationについて}
+fをrecursive fucntionとして、
+
+$\(\lambda \vec{x} . \quad\left(\mu_{y} . f(\vec{x}, y)=0\right) \qquad : \quad \mathbb{N}^{n} \rightarrow \mathbb{N}\)$
+
+を表現できることを示せばよい。
+
+これは、$f(\vec{x},y)$に対応する述語をまず作り、P(X,Y)として、このYの部分を変数として、prologで実行すればよい。こうすることで、prologは$f(\vec{x},y)=0$を満たす最小のyを返す。よって、Minimizationは表現できている。
+
+ここで、Prologの処理系は最小のものからアクセスするのかという疑問が上がるかもしれないが、実際、prologの処理系ではminimumの値からアクセスされている。
+\begin{lstlisting}[caption=Minimization]
+?- add(X,Y,s(s(s(z)))).
+X = z,
+Y = s(s(s(z))) ;
+X = s(z),
+Y = s(s(z))
+\end{lstlisting}
+
+以上より、recursive function を表現できたことになり、tyーリング完全であることが示された。
+
+
+
+\end{document}

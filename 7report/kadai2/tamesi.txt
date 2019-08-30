@@ -1,0 +1,39 @@
+variant型に適当に入れて抜くそのあとに型推論
+y := 1 :: (!y) ; pick (!y);;
+- : int list = []
+
+let fact = fun f -> fun x -> if x = 0 then 1 else x * ((f f) (x-1)) in (fact fact) 10
+  ;;
+これ型つきそうなのに型が付かない
+
+
+# let rec twin x = (x, x)
+and twin_map = function
+  | [] -> []
+  | (x::xs) -> (twin x, twin "hello") :: twin_map xs      ;;
+val twin : string -> string * string = <fun>
+val twin_map : string list -> ((string * string) * (string * string)) list =
+  <fun>
+  と
+
+# let twin x = (x,x)
+let rec twin_map = function
+  | [] -> []
+  | (x::xs) -> (twin x, twin "hello") :: twin_map xs      ;;
+val twin : 'a -> 'a * 'a = <fun>
+val twin_map : 'a list -> (('a * 'a) * (string * string)) list = <fun>
+
+
+
+一言で言うと ML や Haskell が根ざしている Hindley Milner の型推論システムの特徴として、let 束縛中で定義されつつある値はその定義中では多相型を持てない。twin と twin_map を一段の let rec で定義した例では twin は一種類の型にしか対応できない。そして twin "hello" と文字列に使ってしまっている。それに引きずられて twin x のパラメータ x の型も string になってしまう。twin_map も同様である。
+
+
+
+型なしラムダ計算
+# let rec f x = f x;;
+val f : 'a -> 'b = <fun>
+# f f;;
+
+
+
+

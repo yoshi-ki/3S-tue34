@@ -1,0 +1,25 @@
+まず、parserでエラーを起こした時に、どの部分でエラーを起こしたのか表示してくれるようにした。
+this expression has type hogehoge but an hugahugaにした
+unboud errorで何が足りないのかを表示するようにした
+Errorの色付けを行った。
+ocaml のversion表示
+
+listを出力できるようにする
+consの出力
+
+refの実装
+# let a = ref 2;;
+val a : int ref {contents = 2}
+# a := true;;
+Error: This expression has type bool but an expression was expected of type int
+# a := 4;;
+- : int = 4
+# a;;
+- : int ref = {contents = 4}
+# !a;;
+- : int ref = 4
+
+
+
+
+

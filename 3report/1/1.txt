@@ -1,0 +1,79 @@
+まず、cmiの順番を変えてみるとエラーがでた、
+File "strSet.ml", line 1:
+Error: Could not find the .cmi file for interface strSet.mli.
+.cmifileへの参照を行なっているタメであろう。
+.mliをコンパイルしないと↑こうなる。
+
+sort.mlはmodule StrSetを用いている
+moduleの中で定義された関数を使うことができる
+→sort.mlはstrSetの関数定義がないと実行できない
+
+strSet.ml
+
+.cmoをインタプリタで使ってみる
+count_subだけ評価できない→なぜ？
+mliファイルで定義されていないから
+
+
+mli fileをコンパイルしないとこうなる
+sort: strSet.cmo sort.cmo
+    ocamlc -o sort strSet.cmo sort.cmo
+strSet.cmo: strSet.ml
+    ocamlc -c strSet.ml
+sort.cmo: sort.ml
+    ocamlc -c sort.ml
+
+clean:
+    rm -rf *.cmi *.cmo sort
+make: *** No rule to make target `strSet.cmi', needed by `sort'.  Stop.
+これはsortで、strSetの関数を使用しようとするが、cmi fileがないので、signitureが定義できず、エラーが起きる。
+
+
+
+sort.cmoを先に作る
+sort: sort.cmo strSet.cmi strSet.cmo
+    ocamlc -o sort sort.cmo strSet.cmo
+strSet.cmo: strSet.ml
+    ocamlc -c strSet.ml
+strSet.cmi: strSet.mli
+    ocamlc -c strSet.mli
+sort.cmo: sort.ml
+    ocamlc -c sort.ml
+
+clean:
+    rm -rf *.cmi *.cmo sort
+
+File "sort.ml", line 2, characters 5-11:
+Error: Unbound module StrSet
+make: *** [sort.cmo] Error 2
+sort.cmoを作る際に、strSetと言うmoduleを参照するが、参照できないため、エラーを起こしてしまう。
+
+
+
+リンク時の順番を変える
+sort: strSet.cmi strSet.cmo sort.cmo
+    ocamlc -o sort sort.cmo strSet.cmo
+strSet.cmo: strSet.ml
+    ocamlc -c strSet.ml
+strSet.cmi: strSet.mli
+    ocamlc -c strSet.mli
+sort.cmo: sort.ml
+    ocamlc -c sort.ml
+
+clean:
+    rm -rf *.cmi *.cmo sort
+
+File "_none_", line 1:
+Error: Required module `StrSet' is unavailable
+make: *** [sort] Error 2
+
+
+sort.cmoはstrSet.cmoに依存しているため、この順番ではだめである。
+
+
+タイムスタンプを新しくするとまたコンパイルされる。
+この事実から、コンパイルを行うべきか否かの判断はタイムスタンプを用いて行なっていることがわかる。
+fujiwarayoshikinoMacBook-Pro:1 fujiwarayoshiki$ touch -t 09010123 sort.ml
+fujiwarayoshikinoMacBook-Pro:1 fujiwarayoshiki$ make
+ocamlc -c sort.ml
+ocamlc -o sort strSet.cmo sort.cmo

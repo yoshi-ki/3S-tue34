@@ -1,0 +1,190 @@
+\documentclass[uplatex,12pt]{jsarticle}
+\usepackage{listings}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+\lstset{basicstyle=\small,style=myCustomMatlabStyle}
+\renewcommand{\lstlistingname}{Code}
+
+\title {Functional and logic programming lab 11th report}
+\date{}
+\begin{document}
+\author{Yoshiki Fujiwara, 05-191023}
+\maketitle
+
+\section{Q1: 述語がうまく動作しない理由}
+以下の述語がうまく動作しない理由を述べる。
+\begin{lstlisting}[caption=動作例]
+ancestor(X,Y) :- ancestor(Z,Y), parent(X,Z).
+ancestor(X,Y) :- parent(X,Y).
+\end{lstlisting}
+
+例えば、ancestor(kobo,iwao)を問い合わせると帰ってこない。
+
+まず、ancestor(kobo,iwao)について一番めのルールancestor(X,Y) :- ancestor(Z,Y), parent(X,Z).を適用する。
+
+適用すると、ancestor(Z,iwao),parent(kobo,Z).となり、ancestor(Z,iwao)について一番目のルールを適用する。
+
+適用すると、ancestor(Z_1,iwao),parent(Z,Z_1).となり、ancestor(Z_1,iwao)について一番目のルールを適用することになる。
+
+このように、ancestor(変数,iwao)を永遠に問い合わせることになる。
+
+以上から、この場合では無限ループに陥ってしまうことが言える。
+
+\section{Q2: 述語がうまく動作しない理由}
+\begin{lstlisting}[caption=動作例]
+nat(z).
+nat(s(N)) :- nat(N).
+nat_list([]).
+nat_list([N|X]) :- nat(N), nat_list(X).
+\end{lstlisting}
+
+このプログラムは自然数のlistを返すことを想定していると判断した。
+
+まず、nat\_list(X)の動きを見る。
+以下のような動きをする。
+\begin{lstlisting}[caption=動作例]
+?- nat_list(X).
+X = [] ;
+X = [z] ;
+X = [z, z] ;
+X = [z, z, z] ;
+X = [z, z, z, z] ;
+X = [z, z, z, z, z] ;
+X = [z, z, z, z, z, z]
+\end{lstlisting}
+このようにzのlistが返る。
+
+この理由について記述する。
+nat\_listについて、まず、nat\_list([]).を見る。これで[]が返る。
+
+次に、nat\_list([N \mid X]) :- nat(N), nat\_list(X).の初めのルールを適用する。natを適用すると、[]が返され、二番目のルールが適用される。
+
+これが繰り返される。
+
+このルール適用は永遠に終わらないため、nat\_list([N \mid X])の二番目のruleの中の
+nat(N)の二番目に入ることはない。
+
+これはなぜなら、二番目の探索をするのは、一番目の探索が終わってからであるからである。
+
+よって、上のような出力になる。
+
+
+
+\section{Q3: 三目並べ}
+
+\subsection{動作例}
+
+\begin{lstlisting}[caption=動作例]
+?- win(1,[0,0,0,0,0,0,0,0,0]).
+false.
+
+?- win(2,[0,0,0,0,0,0,0,0,0]).
+false.
+
+?- win(1,[1,0,0,2,0,0,0,0,0]).
+true ;
+true ;
+true ;
+false.
+
+?- win(1,[0,0,0,2,1,0,0,0,0]).
+true ;
+true ;
+true ;
+true ;
+true ;
+true ;
+false.
+
+?- win(1,[0,1,0,2,0,0,0,0,0]).
+true ;
+true ;
+false.
+\end{lstlisting}
+
+\subsection{考察}
+このwinを実装するために様々な述語を定義したのでその説明を順にする。
+
+盤面については長さ9のlistで表し、まだ置かれていない場所を0、置かれた場所を1と2で表すということにする。
+
+\subsubsection{three\_line}
+この述語は、Pについて、盤面で三つ並んでいるか否かを判定する関数である。三つ並んでいればtrue、並んでいなければfalseになる。
+
+\subsubsection{end}
+この述語は盤面が最終盤面か否かを判定する。最終盤面であればtrue、最終盤面でなければfalseを返す。
+
+\subsubsection{change}
+相手の勝ちを予測する場面があるが、その時に盤面の1と2を反対にして評価することにした。この述語は、listのうち、1である場所を2に、2である場所を1にする述語である。
+
+\subsubsection{exist\_step}
+この述語は、exist\_step(P,B,NEW)のように表し、Pには1か2が入り、0である場所のどこかにPを入れる。これは盤面を一つ進めることに対応している。この実装には前回実装したappend関数を用いた。
+
+
+\subsubsection{win}
+これまでの述語を使って、winという述語を定義することができる。win(P,B)は盤面がBで次に打つのがPなら、Pの必勝であることを表す。
+
+これには二種類ある。まず一つ目は、Pのマークが三つすでに並んでいる場合である。これは、three\_line(P,B)で調べることができる。そして二つ目は、相手のマークがすでに三つ並んでいなくて、一つ進めるとlose(相手,進めた後の盤面)となる場合である。相手のマークがすでに三つ並んでいないことは、change(B,C), \backslash+three\_line(P,C)で表現できる。また、それ以降の部分は、exist\_step(P,B,B1), change(B1,B2), lose(P,B2).で表現できる。exist\_stepで打てる手を調べて、change(B1,B2),lose(P,B2)でPの相手の負けを判定している。この負けの判定のloseについては以下で説明する。
+
+\subsubsection{lose}
+lose(P,B)は盤面がBで次に打つのがPなら、Pの相手が必ず勝つことを表す述語である。
+
+loseについても、二つの場合がある。まず一つ目は、すでに相手が三つ揃えている場合である。その場合は、lose(P,B) :- change(B,B1), three\_line(P,B1).で調べることができる。
+
+二つめの場合は、最終局面ではなく、Pがどんな手を打っても相手が勝つ場合である。
+
+最終局面ではないことは\backslash+end(B)で書くことができる。
+
+任意のを表現するために、否定を用いて表現した。先ほどの「Pがどんな手を打っても相手が勝つ場合を否定する」と、「Pがどこかに置くと相手は勝つことができない」になる。
+
+それをexist\_and\_not\_win(P,B) :- exist\_step(P,B,B1), change(B1,B2), \backslash+win(P,B2).という述語で表現した。
+
+以上から、loseの二番目の場合は、
+lose(P,B) :- \backslash+end(B), \backslash+exist\_and\_not\_win(P,B).と表すことができる。
+
+\subsubsection{全体として}
+上の動作例では、スライドに乗っていた必勝法三通りと、初期盤面がどちらの必勝でもないことを示した。
+
+
+\section{Q4: 処理系の実装}
+
+この実装について、時間的制約のもと、終わらせることができなかったのですが、部分点だけでもいただけると幸いです。
+
+\subsection{実装}
+まず、型の実装をした。
+述語の型と、expressionの型を定義した。
+
+expressionの型については述語に対応するTyFunと、変数に対応するTyVarとそれ以外を表すTySymとした。
+
+\vspace{12pt}
+
+unifierを作る必要がある。導出において、最汎単一化子を求めることが必要になるからである。このコードは第八回の課題で作成したものに基づいて作成した。
+
+\vspace{12pt}
+
+次に、eval\_commandを実装した。eval.ml参照。今回はプログラムの部分は初めからenvに保存しておく実装にしたため、とい合わせに対応するQueryの部分のみを実装すれば良い。
+
+Queryの部分で受け取った問い合わせる式はまずは、Queueに入る。そして、search\_solution関数に渡される。
+
+search\_solution関数では、関数の中でsearch関数を呼ぶ。
+主な探索はsearch関数で行う。
+この関数では何をするかというと、答えの出力を行う。search関数で返ってくるのは制約集合であるため、その制約を実際の変数に代入して、答えとする。また、探索に失敗していた場合はfalseを返す関数である。
+この中の補助関数として、gen\_solutionという関数が定義されているが、この関数は、制約を実際の変数に代入する関数である。
+
+search関数の説明をする。探索は幅優先探索を行うことにした。まず、探索を始める(goalの)predicateについて、construct\_nodeという関数を用いて、goalのpredicateを書き換える。queueの中身を見るために、一つ一つpopしていく作業を行いたいので、construct\_nodeの前に、queueをコピーしておいた。
+
+そして新しく得たgoalのもと、eval\_goal関数を用いて、評価する。
+goalから一つ取り出して、ruleを用いてunifyをtryする
+全てのgoalに対してunifyができなかった場合はfailとなる。
+もし、unifyできたら、unifyを行なって、
+代入後のgoalと代入のpairをqueueに追加する
+
+よって、今回実装したのは、unifierの部分と、evalする部分である。
+evalする部分のデバッグが行えておらず、errorが出てしまいます。
+型についてはtype.mlに、evalについてはeval.mlに実装しています。
+
+
+
+
+
+
+\end{document}

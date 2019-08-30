@@ -1,0 +1,8 @@
+funの引数をリストにする。
+lvarを定義する。
+
+VFun の引数部分をlistにする。
+print_stringの部分を変える。
+
+
+

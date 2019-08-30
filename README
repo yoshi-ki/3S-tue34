@@ -1,0 +1,119 @@
+3S-mon34
+====
+
+Overview
+  This repository contains code that I wrote in a class, "System programming lab."
+
+## Description
+
+  1report:
+		1 : create basic function with functional programming language
+		2 : compositional function
+		3 : fix function
+		4 : fold-right and fold-left 
+		5 : append function 
+		6 : append function
+		7 : permutation function
+		8 : reverse fuction
+		9 : fold_right with fold_left and fold_left with fold_right
+		10 : arithmetic operations with chrch number
+		
+	2report:
+		1 : Peano arithmetics
+		2 : binary tree 
+		3 : binary tree (level order)
+		4 : type
+		5 : eval_function
+		6 : fix function
+		7 : Carry Haward 
+		8 : curry uncurry
+		
+	3report:
+		1 : Ocaml make file 
+		2 : module
+		3 : functor
+		4 : associative array 
+		5 : matrix 
+		6 : module EQ
+		
+	4report:
+		1 : usage of the exception
+		2 : non-determinitic monad
+		3 : writer monad
+		4 : fibonacci function with monad
+
+	5report:
+		we made an interpreter
+		1 : how to use ocamlycc	   
+		2 : interpreter that can do arithmetic operations
+		3 : interpreter with variables
+		4 : bool expression
+		5 : error processing 
+		6 : consequent let expression 
+		7 : "let and expression 
+
+	6report:
+	  we made a better interpreter
+		1 : function expression
+		2 : recursive function expression 
+		3 : let rec and expression
+		4 : different ways to realize recursive function
+		5 : "fun ->" expression
+		6 : recursive definition of values 
+		7 : dynamic function	
+
+	7report:
+		type checker
+		1 : type check
+		2 : misunderstandable type 
+	
+	8report
+		type check algorithm
+		1 : the most general quantifier
+		2 : type substruction function
+		3 : compose subtruct function 
+		4 : unifier
+		5 : multi-layer let
+	  6 : occurance check
+		7 : type inference
+		
+	9report:
+		improve the interpreter 
+		1 : pair and list	
+	  2 : pattern match 
+		3 : pattern match and type check
+		4 : call by name 
+		5 : call by need
+		6 : final interpreter
+
+	10report:
+		introduction of prolog
+		1 : blood relative
+		2 : multiplication
+		3 : reverse
+		4 : hamilton path
+		5 : prove prolog is turing complete
+		
+	11report:
+		3 : tic-tok-toe
+		
+	12report:
+		prolog processor
+	
+	13report:
+		reversi in ocaml
+		
+
+
+
+
+
+
+
+  report2:
+  report2:
+  report2:
+  report2:
+  report2:
+  report2:
+

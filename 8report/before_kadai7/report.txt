@@ -1,0 +1,8 @@
+let x = fun x -> (x, x) in
+let x = fun y -> x (x y) in
+let x = fun y -> x (x y) in
+let x = fun y -> x (x y) in
+let x = fun y -> x (x y) in
+let x = fun y -> x (x y) in
+x (fun x -> x)
+

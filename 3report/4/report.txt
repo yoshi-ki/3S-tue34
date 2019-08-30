@@ -1,0 +1,25 @@
+4.mlを動かす
+
+let s = Map.empty;;
+val s : 'a Map.t = <abstr>
+
+let t = Map.add 1 "one" s;;
+val t : string Map.t = <abstr>
+
+# let u = Map.add 2 "two" t;;
+val u : string Map.t = <abstr>
+
+# let v = Map.add 5 "five" u;;
+val v : string Map.t = <abstr>
+
+# let w = Map.add 4 "four" v;;
+val w : string Map.t = <abstr>
+
+# Map.lookup 4 w;;
+- : string = "four"
+
+# let x = Map.remove 4 w;;
+val x : string Map.t = <abstr>
+
+# Map.lookup 4 x;;
+Exception: Multiset2(T).Eval_error.

@@ -1,0 +1,27 @@
+test.mlを動かす
+
+let s = Bst.empty;;
+val s : Bst.t = <abstr>
+
+let t = Bst.add 1 s;;
+val t : Bst.t = <abstr>
+
+ let u = Bst.add 2 t;;
+ val u : Bst.t = <abstr>
+
+let v = Bst.add 5 u;;
+val v : Bst.t = <abstr>
+
+let w  = Bst.add 4 v;;
+val w : Bst.t = <abstr>
+
+let x = Bst.remove 4 w;;
+val x : Bst.t = <abstr>
+
+Bst.count 4 x;;
+- : int = 0
+
+# Bst.count 5 x;;
+- : int = 1
+
+

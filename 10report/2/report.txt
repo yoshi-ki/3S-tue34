@@ -1,0 +1,18 @@
+?- add(s(s(z)),Z,X).
+X = s(s(Z)).
+
+addは第二引数を変数に変数を取ったパターンだと、変数を2個取れる
+
+
+?- mult(s(z),s(z),X).
+X = s(z).
+
+?- mult(s(s(z)),s(z),X).
+X = s(s(z)).
+
+?- mult(s(s(z)),s(s(s(z))),X).
+X = s(s(s(s(s(s(z)))))).
+
+mult(s(z),X,s(s(z))).
+
+

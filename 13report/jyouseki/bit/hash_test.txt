@@ -1,0 +1,22 @@
+# open Hashtbl;;
+# let my_hash = Hashtbl.create 123456;;
+val my_hash : ('_weak1, '_weak2) Hashtbl.t = <abstr>
+# let create_hash hash filename =
+  let fin = open_in filename in
+  let cat_sub () =
+    while true do
+    let black_bit = input_line fin in
+    let white_bit = input_line fin in
+    let move1 = int_of_string (input_line fin) in
+    let move2 = int_of_string (input_line fin) in
+    Hashtbl.add my_hash ((Int64.of_string black_bit),(Int64.of_string white_bit)) (move1,move2);
+    done
+  in
+  try cat_sub () with End_of_file -> close_in fin
+  val create_hash : 'a -> string -> unit = <fun>
+# create_hash my_hash "hash.txt";;
+- : unit = ()
+# my_hash;;
+- : (int64 * int64, int * int) Hashtbl.t = <abstr>
+# Hashtbl.find my_hash (0L,1L);;
+- : int * int = (2, 3)

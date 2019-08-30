@@ -1,0 +1,187 @@
+\documentclass[uplatex,12pt]{jsarticle}
+\usepackage{listings}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+\lstset{basicstyle=\small,style=myCustomMatlabStyle}
+\renewcommand{\lstlistingname}{Code}
+
+\title {Functional and logic programming lab 7th report}
+\date{}
+\begin{document}
+\author{Yoshiki Fujiwara, 05-191023}
+\maketitle
+\section{Q1: 型がつくものだけを評価}
+\subsection{動作例}
+\begin{lstlisting}[caption=動作例]
+Check if the constant works
+# 1;;
+- = 1
+# true;;
+- = true
+
+Arithmetic operations
+# 1 + true;;
+Error = Unmatched type
+# 1 - false;;
+Error = Unmatched type
+# 2 * true;;
+Error = Unmatched type
+# 3 / false;;
+Error = Unmatched type
+# 1 + 2;;
+int
+- = 3
+# 2 * 3;;
+int
+- = 6
+# 4 - 2;;
+int
+- = 2
+# 4 / 2;;
+int
+- = 2
+
+let expressions
+# let x = 2;;
+int
+x = 2
+# x;;
+int
+- = 2
+# let y = true;;
+bool
+y = true
+# y;;
+bool
+- = true
+# x + y;;
+Error = Unmatched type
+
+if expressions
+# if 1 then 2 else 3;;
+Error = Unmatched type
+# if true then 2 else false
+;;
+Error = Unmatched type
+# if true then 2 else 4;;
+int
+- = 2
+
+fun文
+# fun x -> x + 2;;
+(int -> int)
+- = <fun>
+# fun x -> 2;;
+('a2 -> int)
+- = <fun>
+
+function applications
+# let f = fun x -> x + 2;;
+(int -> int)
+f = <fun>
+# f 3;;
+int
+- = 5
+# f false;;
+Error = Unmatched type
+
+let rec in expressions
+# let rec fact n = if (n = 0 ) then 1 else n * fact (n-1) in fact 5;;
+int
+- = 120
+# let rec fact n = if (n = 0 ) then 1 else n * fact (n-1) in fact true;;
+Error = Unmatched type
+
+
+let rec expressions
+# let rec fact n = if n = 0 then 1 else n * fact ( n - 1);;
+int -> int
+- = <fun>
+# fact 5;;
+int
+- = 120
+# fact true;;
+Error = Unmatched type
+\end{lstlisting}
+
+\subsection{考察}
+
+\subsubsection{union関数について}
+まず、この問題の実装を行うためにunion関数を実装した。この関数はyupleのリストを二つ受け取ってそれの和集合を返す関数である。
+
+\subsubsection{infer\_expr関数について}
+
+infer\_exprは、現在の型環境とexpressionを受け取って、そのexpressionの返す型と制約を返す関数である。主にこの部分の定義についてまず考察していく。
+
+四則演算の場合、ここで返す値はInt型なので、返り値の第一要素はTyIntである。また、制約があり、その制約は、四則演算の前後のexprが、int型でなければならないことである。よって、let v1 = infer\_expr tenv e1のように評価を行い、その第一要素で制約をかける。(fst(v1),TyInt)。また、その式の中の制約も受け継がなければならないので、unionを用いて受け継ぐ。
+
+EEq（equal expression)について、
+ここで返す型はbool型なので、返り値の第一要素はTyBoolである。また、制約については、比べるもの同士の型が等しいことである、それに=前後のexpressionの制約をunionする。
+
+EIf (if expression)について、
+まず、e1,e2,e3のexpressionを評価する。
+ここで返す型は、e2の返す型であるから、返り値の第一要素は、fst(v2)となる。If文であることに注意すると、e1の評価結果はBool型でならなければならず、
+また、e2とe3の評価結果の型は同じでなければならないことを制約として加える。
+
+ELet(let expression)について、
+まず、今の環境のもとで、e1の型と制約を求める。
+ここでできた環境(newtenv = (e1,fst(v1)) :: tenv)のもとで、e2を評価する。
+返り値の第一要素はその評価結果の第一要素であるし、返り値の第二要素は、e1とe2の評価ででてきた制約をunionしたものである。
+
+EFun (function declaration)について
+まず、新たな型変数newvarを導入する。
+現在の型環境にe1とnewvarとの対応を付け加える。
+そして、そのもとで、e2を評価すれば良い。
+全体の型は、関数の形で、(newvar $\rightarrow$ e2の評価結果の型)となる。
+
+EApp (function application)について、
+まず、現在の型環境でそれぞれのexpressionについて型と制約を求める。
+次に新たな型変数newvarを導入する。
+返り値の第一要素はnewvarであり、制約として、((e1の評価結果の型) = (e2の評価結果の型) $\rightarrow$ (newvar))を与える。
+
+ELetRec(let rec in expressions)について
+新しい型変数を導入する。それをnewvar1とnewvar2とする。現在の型環境に、fとnewvar$\rightarrow$newvar2を対応づけたもの、xとnewvar1を対応づけたものを追加する。その環境で、e3(再帰関数のexpression)の型と制約を求める。また、それとは別にfとnewvar1 $\rightarrow$ newvar2を対応づけたものを追加した環境で、e4(再帰関数のapplication)の型と制約を求める。
+式全体の評価は関数の返り値の型と、全ての制約をunionしたものになる。
+
+
+\subsubsection{eval\_commandの部分}
+上記で、型推論は行えるようになったので、実際にそれが合っているか否かの判定を行う関数を作成する。それが、infer\_command関数である。infer\_command関数は型が合っているかの検査を行い、あっていなかったらTyErrorを返す関数である。TyErrorのcatchはeval\_commandで行う。
+
+CExpの際は、eval\_commandに何も工夫はいらず、infer\_commandで検査を行う。inferに推論の結果を入れ、型制約を解く。返り値はあとで再帰関数を定義する時のために、pairにしているが、同じ要素を入れている。
+
+CDeclの時と、CRecDeclの際は、eval\_command内で、tenvを変更する必要がある。つまり、変数の型を格納しなければならない。今、CDeclでは一変数しか入らないため、type\_result、すなわち、infer\_commandの結果を現在の環境に追加すれば良い。
+
+CRecDeclの時は、infer\_commandの中で、再帰関数の処理を行わなければならない。lookup newvar1 (snd(infer))で引数の型をとる。そして、pairで返すようにしている。なぜなら、関数の型環境の追加を行うためには、引数の型と返り値の型の両方が必要であるからである。
+
+これによって、let recの文で関数が定義できるようになり、また、関数評価の際に、適切でない型が来ることを防ぐことができる。
+
+\subsubsection{main.mlの変更}
+main.mlでは、tenvという変数を作った。これは、let文が型環境を維持できるようにするためである。これを行わないと、let x = 2;; x ;;でunbound variableのerrorをはいてしまう。
+
+
+\section{型がついても良さそうだが型がつかないプログラム}
+
+\subsection{解答1}
+
+let y = fun f \rightarrow ((fun x \rightarrow f (x x)) (fun x \rightarrow f (x x)));;
+
+これは型がつきそうである。なぜなら、型推論の木が書けるからである。しかし、型の方程式を解くときに、$\alpha = \alpha \rightarrow (int \rightarrow int)$を解かなければならず（これについては後述）、ocamlでは解決できない。これはYコンビネータと呼ばれるものである。型なしの世界ではYコンビネータの型付けはできるが、型ありの世界では型がつけられない。よってこのようにocamlで解決できない。Ocamlでこれと同じ機能を持った関数を実装するためには、fix関数を使えば良い。（第一回のスライドのfix関数）
+
+ここでの議論をもう少し詳しく書く。
+
+例えばfibonacci関数を考える。不動点コンビネータ（関数からその関数の不動点への関数）の一つであるYコンビネータについて考える。Yコンビネータは以下のように表せる。$$\(\mathbf{Y}=\lambda f .(\lambda x . f(x x))(\lambda x . f(x x))\)$$
+$(x_1,x_2)$の関数適用の部分について、
+$x_1の型は、\alpha \rightarrow (int \rightarrow int)$、$x_2の型は$$\alpha$である。ここで、 $\alpha = \alpha \rightarrow (int \rightarrow int)$が要求される。
+
+\subsection{解答2}
+
+let fix g = (fun f \rightarrow g (fun x \rightarrow f f x)) (fun f \rightarrow g (fun x \rightarrow f f x))
+
+これも同様の理由で定義できない例である。
+
+
+
+
+
+
+\end{document}

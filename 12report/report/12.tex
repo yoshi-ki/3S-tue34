@@ -1,0 +1,147 @@
+\documentclass[uplatex,12pt]{jsarticle}
+\usepackage{listings}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+\lstset{basicstyle=\small,style=myCustomMatlabStyle}
+\renewcommand{\lstlistingname}{Code}
+
+\title {Functional and logic programming lab 12nd report}
+\date{}
+\begin{document}
+\author{Yoshiki Fujiwara, 05-191023}
+\maketitle
+
+\section{等式論理}
+\subsection{論理的解釈}
+この論理的解釈で正しいことを示す。
+
+eq(c,b)が成立しているので、4つ目のルールを用いて、eq(b,c)も成立する。
+
+よって、eq(a,b)とeq(b,c)より、三つ目のルールを用いて、eq(a,c)も成立する。よって、論理的解釈のもとでは、eq(a,c)はtrueである。
+
+\subsection{prolog処理系での問い合わせ}
+prologでは上のルールから順に適用されていくので、まず、eq(a,c)について三つ目のルールが適用される。
+
+そして、eq(a,Y),eq(Y,c)のルールについて、まず左側のeq(a,Y)の探索を行う。
+
+まず、一つ目のルールより、Y=bでtrueとなる。prolog処理系は深さ優先探索なので、三つ目のeq(X,Y),eq(Y,Z)のルールについてもみて、
+
+eq(a,Y_1),eq(Y_1,Y)のルールの探索を行う。
+
+このように、eq(a,変数)の探索を永遠に行い続けるようになる。
+
+よって止まらない。
+
+\subsection{処理系の工夫}
+これを解消するために、処理系を幅優先探索にすれば良い。
+
+幅優先探索にすると、上述のeq(a,Y),eq(Y,c)のルールについて、まず左側のeq(a,Y)の探索を行う段階で、Y=bのみがまずeq(a,Y)をtrueにする答えとして探索結果が出る。
+
+その次に、eq(b,c)の探索に入るが、一つ目〜三つ目のルールは適用されても、解がない。4つ目のルールで適用されるルールでは、eq(b,c):-eq(c,b)隣、trueが返る。
+
+よって、論理的解釈に近づく。
+
+
+\section{単一化}
+
+\subsection{論理的解釈}
+論理的解釈のもとでは、
+
+一つ目の式は、$\forall X. q(X,X) \rightarrow test$を表していて、
+
+二つ目の式は$\forall X. q(X,f(X))$を表している。
+
+test.の真偽値を問うことは、$\forall X. q(X,X)$の真偽値を問うことと等しく、$\forall X. q(X,f(X))$だけでは導けないので、falseが返ってくる。
+
+\subsection{test.の問い合わせ}
+しかし、prolog処理系で、test.を問い合わせると、trueが返る。
+
+これは、q(X,X)がtrueとなる解が存在していることを表す。
+
+実際にq(X,X)を問い合わせしてみると、X=f(X).が返ってくる。
+
+これはprolog処理系が単一化の出現チェックを行なっていないからである。出現チェックを行なっていない場合、最汎単一化子となる代入X=tに置いて、tにXが入っている状態になり得るからである。
+
+SLD導出において、q(X,X)とq(X,f(X))が単一化可能か否かを調べる。その際に、出現チェックをしていないと、X=f(X)を、単一化子として単一化可能となってしまう。これによって、X=f(X)が答えとして出てしまう。
+
+
+\section{否定}
+
+\subsection{論理的解釈}
+プログラムについて論理的解釈を行うと、
+
+一つ目の式については、$\forall X.(p(X) \leftrightarrow X=a)$、
+
+二つ目の式については、$\forall X.(q(X) \leftrightarrow X=b)$となる。
+
+問い合わせについては、$\exists X.(\lnot p(X) \land q(X))$と論理的解釈ができる。
+
+X=bについて、これは成立するため、この問い合わせはtrueとなるはずである。
+
+\subsection{prolog処理系での問い合わせ}
+しかし、prolog処理系で問い合わせを行うと、falseとなる。
+\backslash + p(X)は常に、falseとなってしまう。これはp(a)で成立するというルールしか宣言していないためである。prolog処理系では、\backslash + p(X)が論理的意味として、$\lnot \exists X.p(X)$となってしまう。
+
+?- q(X), \backslash + p(X).とすると、論理的解釈と同じ結果が得られる。
+これはなぜなら、q(X)についての問い合わせを先に行なって、X=bが返ってきて、\backslash + p(b)はtrueを返すため、X=bが返ってくる。こうして、notの部分を変数でなくすれば、期待した通りの問い合わせができる。
+
+
+\section{発展1}
+\subsection{論理的帰結であること}
+このプログラムが論理的帰結であることを示す。
+
+p(a)の真偽は必ず定まるので、p(a)か$\lnot p(a)$のどちらかは真となるので、r(a)は常にtrueとなる。
+
+\subsection{Prolog処理系での問い合わせ}
+Prolog処理系でこれを問い合わせると、無限ループに入ってしまう。
+
+r(a)についてprologで問い合わせを行うと、p(a)についての問い合わせを行う。
+
+p(a)についての問い合わせを行うと無限ループする。なぜなら、p(X) :- p(f(X))の問い合わせが永遠に終わらないからである。
+
+\section{発展2}
+
+この実装について、時間的制約のもと、終わらせることができなかったのですが、部分点だけでもいただけると幸いです。
+
+\subsection{実装}
+まず、型の実装をした。
+述語の型と、expressionの型を定義した。
+
+expressionの型については述語に対応するTyFunと、変数に対応するTyVarとそれ以外を表すTySymとした。
+
+\vspace{12pt}
+
+unifierを作る必要がある。導出において、最汎単一化子を求めることが必要になるからである。このコードは第八回の課題で作成したものに基づいて作成した。
+
+\vspace{12pt}
+
+次に、eval\_commandを実装した。eval.ml参照。今回はプログラムの部分は初めからenvに保存しておく実装にしたため、とい合わせに対応するQueryの部分のみを実装すれば良い。
+
+Queryの部分で受け取った問い合わせる式はまずは、Queueに入る。そして、search\_solution関数に渡される。
+
+search\_solution関数では、関数の中でsearch関数を呼ぶ。
+主な探索はsearch関数で行う。
+この関数では何をするかというと、答えの出力を行う。search関数で返ってくるのは制約集合であるため、その制約を実際の変数に代入して、答えとする。また、探索に失敗していた場合はfalseを返す関数である。
+この中の補助関数として、gen\_solutionという関数が定義されているが、この関数は、制約を実際の変数に代入する関数である。
+
+search関数の説明をする。探索は幅優先探索を行うことにした。まず、探索を始める(goalの)predicateについて、construct\_nodeという関数を用いて、goalのpredicateを書き換える。queueの中身を見るために、一つ一つpopしていく作業を行いたいので、construct\_nodeの前に、queueをコピーしておいた。
+
+そして新しく得たgoalのもと、eval\_goal関数を用いて、評価する。
+goalから一つ取り出して、ruleを用いてunifyをtryする
+全てのgoalに対してunifyができなかった場合はfailとなる。
+もし、unifyできたら、unifyを行なって、
+代入後のgoalと代入のpairをqueueに追加する
+
+よって、今回実装したのは、unifierの部分と、evalする部分である。
+evalする部分のデバッグが行えておらず、errorが出てしまいます。
+型についてはtype.mlに、evalについてはeval.mlに実装しています。
+
+
+
+
+
+
+
+
+
+\end{document}

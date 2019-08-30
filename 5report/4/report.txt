@@ -1,0 +1,11 @@
+lexer.mll
+とりあえず、&& と ||を作って、それに対して。parserができるように設定
+
+parser.mly
+lexerに対応するtokenを宣言
+boolian_exprとfactor2_exprを作って、優先順位つけを行う
+andが+ orが*に対応。
+andが先に評価される
+
+
+

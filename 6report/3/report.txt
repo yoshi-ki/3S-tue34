@@ -1,0 +1,31 @@
+# let rec even n =
+  if n = 0 then true
+  else odd (n-1)
+  and
+  odd n =
+  if n = 0 then false
+  else even (n-1)
+;;
+- = <fun>
+# even 2;;
+- = true
+# odd 5;;
+- = true
+# odd 4;;
+- = false
+# even 87;;
+- = false
+
+ let rec even n =
+  if n = 0 then true
+  else odd (n-1)
+  and
+  odd n =
+  if n = 0 then false
+  else even (n-1)
+in
+even 2;;
+- = true
+
+
+

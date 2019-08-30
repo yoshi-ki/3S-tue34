@@ -1,0 +1,9 @@
+sort: strSet.cmo sort.cmo
+	ocamlc -o sort strSet.cmo sort.cmo
+strSet.cmo: strSet.ml
+	ocamlc -c strSet.ml
+sort.cmo: sort.ml
+	ocamlc -c sort.ml
+
+clean:
+	rm -rf *.cmi *.cmo sort

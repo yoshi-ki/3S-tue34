@@ -1,0 +1,36 @@
+第一問
+
+
+
+
+第3問
+追加する型環境を返す関数find_matchを定義する
+スライドにしたがって作成
+
+match文の中身を実装する
+
+constraintsolver.mlの中身を増やす
+
+まず、
+
+
+
+
+# let a = match 1 with 1 -> true | 2 -> false;;
+bool
+a = true
+# let a = match 1 with 1 -> true | false -> false;;
+Error = Unmatched type
+# let a = match 1 with 1 -> 1 | 2 -> false;;
+Error = Unmatched type
+
+# 2 :: (1 :: []);;
+intlist
+- = VCons
+# true :: (1 :: []);;
+Error = Unmatched type
+
+
+
+
+

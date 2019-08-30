@@ -40,12 +40,12 @@ char list = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g']
 
 課題5
 eval (Eif (EConstBool true, EConstInt 2, EConstInt 2));;
-value = VInt 2 
+value = VInt 2
 constとboolとifの可動性の証明
 
 eval (EAdd (EConstInt 2, EConstInt 2));;
 value = VInt 4
-EAdd  
+EAdd
 
 eval (ESub (EConstInt 2, EConstInt 2));;
 value = VInt 0
